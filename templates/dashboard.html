@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SatNTP - GPS Disciplined NTP Server</title>
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+</head>
+<body>
+    <header>
+        <div class="header-left">
+            <h1>SatNTP</h1>
+            <span class="subtitle">GPS-Disciplined NTP Server</span>
+        </div>
+        <div class="header-right">
+            <span id="connection-status" class="status-badge disconnected">Connecting...</span>
+            <span id="clock" class="clock">--:--:--</span>
+        </div>
+    </header>
+
+    <main>
+        <!-- Row 1: GPS Fix + Chrony Tracking -->
+        <div class="grid-row">
+            <section class="card" id="gps-fix-card">
+                <h2>GPS Fix Status</h2>
+                <div class="fix-status-container">
+                    <div id="fix-indicator" class="fix-indicator no-fix">
+                        <span id="fix-text">NO FIX</span>
+                    </div>
+                    <div class="fix-details">
+                        <div class="detail-row">
+                            <span class="label">GPS Time</span>
+                            <span id="gps-time" class="value">--:--:--</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">GPS Date</span>
+                            <span id="gps-date" class="value">----/--/--</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Time Valid</span>
+                            <span id="time-valid" class="value">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Position</span>
+                            <span id="gps-position" class="value">n/a</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">PDOP / HDOP / VDOP</span>
+                            <span id="gps-dop" class="value">-- / -- / --</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Satellites</span>
+                            <span id="sat-summary" class="value">-- seen / -- used</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card" id="chrony-card">
+                <h2>Chrony Synchronization</h2>
+                <div class="chrony-details">
+                    <div class="detail-row">
+                        <span class="label">Reference</span>
+                        <span id="chrony-ref" class="value">--</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Stratum</span>
+                        <span id="chrony-stratum" class="value">--</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">System Time</span>
+                        <span id="chrony-systime" class="value">--</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Last Offset</span>
+                        <span id="chrony-offset" class="value">--</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">RMS Offset</span>
+                        <span id="chrony-rms" class="value">--</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Frequency</span>
+                        <span id="chrony-freq" class="value">--</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Skew</span>
+                        <span id="chrony-skew" class="value">--</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Root Delay</span>
+                        <span id="chrony-rootdelay" class="value">--</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Root Dispersion</span>
+                        <span id="chrony-rootdisp" class="value">--</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Update Interval</span>
+                        <span id="chrony-interval" class="value">--</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Leap Status</span>
+                        <span id="chrony-leap" class="value">--</span>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Row 2: Sky View + Signal Strength -->
+        <div class="grid-row">
+            <section class="card" id="skyview-card">
+                <h2>Sky View</h2>
+                <div class="skyview-container">
+                    <canvas id="skyview-canvas" width="400" height="400"></canvas>
+                </div>
+            </section>
+
+            <section class="card" id="signal-card">
+                <h2>Signal Strength</h2>
+                <div class="signal-container">
+                    <canvas id="signal-canvas" width="600" height="300"></canvas>
+                </div>
+            </section>
+        </div>
+
+        <!-- Row 3: Satellite Table -->
+        <section class="card full-width" id="satellites-card">
+            <h2>Satellites <span id="sat-count-badge" class="count-badge">0 visible</span></h2>
+            <div class="table-container">
+                <table id="satellite-table">
+                    <thead>
+                        <tr>
+                            <th>System</th>
+                            <th>PRN</th>
+                            <th>Elevation</th>
+                            <th>Azimuth</th>
+                            <th>SNR (dB-Hz)</th>
+                            <th>Tracked</th>
+                            <th>Used</th>
+                        </tr>
+                    </thead>
+                    <tbody id="satellite-tbody">
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Row 4: Chrony Sources Table -->
+        <section class="card full-width" id="sources-card">
+            <h2>Time Sources</h2>
+            <div class="table-container">
+                <table id="sources-table">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>State</th>
+                            <th>Name</th>
+                            <th>Stratum</th>
+                            <th>Poll</th>
+                            <th>Reach</th>
+                            <th>Last Rx</th>
+                            <th>Offset</th>
+                            <th>Error</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sources-tbody">
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Row 5: gpsd Info -->
+        <section class="card full-width" id="gpsd-card">
+            <h2>gpsd Status</h2>
+            <div class="gpsd-details">
+                <div class="detail-row">
+                    <span class="label">Connected</span>
+                    <span id="gpsd-connected" class="value">--</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Version</span>
+                    <span id="gpsd-version" class="value">--</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Devices</span>
+                    <span id="gpsd-devices" class="value">--</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Sentences Parsed</span>
+                    <span id="gpsd-sentences" class="value">--</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Parse Errors</span>
+                    <span id="gpsd-errors" class="value">--</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <span>SatNTP &mdash; GPS-Disciplined NTP Server</span>
+    </footer>
+
+    <script src="/static/js/skyview.js"></script>
+    <script src="/static/js/signal.js"></script>
+    <script src="/static/js/dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,391 @@
+/* SatNTP Dashboard - Modern Dark Theme */
+
+:root {
+    --bg-primary: #0f1117;
+    --bg-card: #1a1d27;
+    --bg-card-hover: #1e2130;
+    --border: #2a2d3a;
+    --text-primary: #e4e6ef;
+    --text-secondary: #8b8fa3;
+    --text-muted: #5c6078;
+    --accent-blue: #4a9eff;
+    --accent-green: #34d399;
+    --accent-red: #f87171;
+    --accent-yellow: #fbbf24;
+    --accent-orange: #fb923c;
+    --accent-purple: #a78bfa;
+    --gps-color: #4a9eff;
+    --sbas-color: #a78bfa;
+    --qzss-color: #fb923c;
+    --glonass-color: #f87171;
+    --galileo-color: #34d399;
+    --beidou-color: #fbbf24;
+    --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --radius: 12px;
+    --shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-sans);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+/* Header */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-left {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+}
+
+header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent-blue);
+    letter-spacing: -0.5px;
+}
+
+.subtitle {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.clock {
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.status-badge {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-badge.connected {
+    background: rgba(52, 211, 153, 0.15);
+    color: var(--accent-green);
+    border: 1px solid rgba(52, 211, 153, 0.3);
+}
+
+.status-badge.disconnected {
+    background: rgba(248, 113, 113, 0.15);
+    color: var(--accent-red);
+    border: 1px solid rgba(248, 113, 113, 0.3);
+}
+
+/* Main Layout */
+main {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.grid-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+/* Cards */
+.card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+}
+
+.card.full-width {
+    width: 100%;
+}
+
+.card h2 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.count-badge {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+    background: rgba(74, 158, 255, 0.15);
+    color: var(--accent-blue);
+    border: 1px solid rgba(74, 158, 255, 0.3);
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+/* Fix Status */
+.fix-status-container {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.fix-indicator {
+    min-width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.fix-indicator.no-fix {
+    background: rgba(248, 113, 113, 0.1);
+    border: 3px solid var(--accent-red);
+    color: var(--accent-red);
+    animation: pulse-red 2s ease-in-out infinite;
+}
+
+.fix-indicator.fix-2d {
+    background: rgba(251, 191, 36, 0.1);
+    border: 3px solid var(--accent-yellow);
+    color: var(--accent-yellow);
+}
+
+.fix-indicator.fix-3d {
+    background: rgba(52, 211, 153, 0.1);
+    border: 3px solid var(--accent-green);
+    color: var(--accent-green);
+    animation: pulse-green 3s ease-in-out infinite;
+}
+
+@keyframes pulse-red {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.4); }
+    50% { box-shadow: 0 0 20px 4px rgba(248, 113, 113, 0.2); }
+}
+
+@keyframes pulse-green {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.4); }
+    50% { box-shadow: 0 0 20px 4px rgba(52, 211, 153, 0.2); }
+}
+
+.fix-details {
+    flex: 1;
+}
+
+/* Detail Rows */
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(42, 45, 58, 0.5);
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-row .label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.detail-row .value {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--text-primary);
+}
+
+.value.warning {
+    color: var(--accent-yellow);
+}
+
+.value.error {
+    color: var(--accent-red);
+}
+
+.value.good {
+    color: var(--accent-green);
+}
+
+/* Sky View */
+.skyview-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#skyview-canvas {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Signal Strength */
+.signal-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#signal-canvas {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Tables */
+.table-container {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+thead th {
+    text-align: left;
+    padding: 10px 12px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+}
+
+tbody td {
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(42, 45, 58, 0.3);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    white-space: nowrap;
+}
+
+tbody tr:hover {
+    background: var(--bg-card-hover);
+}
+
+/* Constellation color indicators */
+.constellation-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.constellation-badge.gp { background: rgba(74, 158, 255, 0.15); color: var(--gps-color); }
+.constellation-badge.sb { background: rgba(167, 139, 250, 0.15); color: var(--sbas-color); }
+.constellation-badge.qz { background: rgba(251, 146, 60, 0.15); color: var(--qzss-color); }
+.constellation-badge.gl { background: rgba(248, 113, 113, 0.15); color: var(--glonass-color); }
+.constellation-badge.ga { background: rgba(52, 211, 153, 0.15); color: var(--galileo-color); }
+.constellation-badge.gb { background: rgba(251, 191, 36, 0.15); color: var(--beidou-color); }
+
+/* SNR bar in table */
+.snr-bar-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.snr-bar {
+    width: 60px;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.snr-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+/* Source state indicators */
+.source-state {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.source-state-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.source-state-dot.selected { background: var(--accent-green); }
+.source-state-dot.combined { background: var(--accent-blue); }
+.source-state-dot.not-combined { background: var(--text-muted); }
+.source-state-dot.error { background: var(--accent-red); }
+.source-state-dot.variable { background: var(--accent-yellow); }
+.source-state-dot.unusable { background: var(--accent-orange); }
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 16px;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    border-top: 1px solid var(--border);
+    margin-top: 20px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .grid-row {
+        grid-template-columns: 1fr;
+    }
+    .fix-status-container {
+        flex-direction: column;
+        align-items: center;
+    }
+    main {
+        padding: 12px;
+    }
+}
