@@ -74,10 +74,10 @@ class GPSDClient:
                 self._stream_nmea()
             except Exception as e:
                 logger.error(f"gpspipe error: {e}")
-                self._connected = False
-                # Wait before retry
-                if not self._stop_event.wait(5):
-                    continue
+            self._connected = False
+            # Always wait before reconnecting to prevent a tight retry loop
+            if self._stop_event.wait(5):
+                break
 
     def _stream_nmea(self):
         """Stream NMEA data from gpspipe subprocess."""
