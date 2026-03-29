@@ -82,7 +82,7 @@ class GPSDClient:
     def _stream_nmea(self):
         """Stream NMEA data from gpspipe subprocess."""
         logger.info(f"Starting gpspipe connection to {self.host}:{self.port}")
-        cmd = ['gpspipe', '-r', '-o', '-S', self.host + ':' + str(self.port)]
+        cmd = ['gpspipe', '--nmea', self.host + ':' + str(self.port)]
 
         try:
             proc = subprocess.Popen(
