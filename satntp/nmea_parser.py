@@ -488,7 +488,7 @@ class NMEAParser:
             keys_to_remove = [
                 k for k in self.state.satellites
                 if k[0] == _talker_to_constellation(talker)
-                or (talker == 'GP' and k[0] in ('GP', 'SB', 'QZ', '??'))
+                or (talker == 'GP' and k[0] in ('GP', 'SB', 'QZ', 'GL', 'GA', 'GB', '??'))
             ]
             for k in keys_to_remove:
                 del self.state.satellites[k]

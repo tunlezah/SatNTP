@@ -6,6 +6,7 @@ set -e
 
 INSTALL_DIR="/opt/satntp"
 SERVICE_USER="satntp"
+DEFAULT_PORT=5000
 
 echo "=== SatNTP Installer ==="
 echo ""
@@ -14,6 +15,24 @@ echo ""
 if [ "$EUID" -ne 0 ]; then
     echo "Please run as root (sudo ./install.sh)"
     exit 1
+fi
+
+# ── Find available web server port ──
+find_available_port() {
+    local port=$1
+    while ss -tlnH "sport = :$port" 2>/dev/null | grep -q ":$port " || \
+          ss -tlnH 2>/dev/null | grep -q ":$port "; do
+        echo "  Port $port is in use, trying next..."
+        port=$((port + 1))
+    done
+    echo "$port"
+}
+
+SATNTP_PORT=$(find_available_port $DEFAULT_PORT)
+if [ "$SATNTP_PORT" -ne "$DEFAULT_PORT" ]; then
+    echo "Note: Default port $DEFAULT_PORT was in use."
+    echo "      Using port $SATNTP_PORT instead."
+    echo ""
 fi
 
 # Install system dependencies
@@ -43,7 +62,7 @@ chown -R "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR"
 # Install gpsd config
 echo "[5/7] Configuring gpsd..."
 if [ -f /etc/default/gpsd ]; then
-    cp /etc/default/gpsd /etc/default/gpsd.backup.$(date +%Y%m%d%H%M%S)
+    cp /etc/default/gpsd "/etc/default/gpsd.backup.$(date +%Y%m%d%H%M%S)"
 fi
 cp "$INSTALL_DIR/config/gpsd.conf" /etc/default/gpsd
 
@@ -58,9 +77,10 @@ if [ -f "$CHRONY_CONF" ]; then
 fi
 cp "$INSTALL_DIR/config/chrony.conf" "$CHRONY_CONF"
 
-# Install and enable systemd service
+# Install and enable systemd service with the selected port
 echo "[7/7] Installing systemd service..."
-cp "$INSTALL_DIR/config/satntp.service" /etc/systemd/system/
+sed "s/Environment=SATNTP_PORT=5000/Environment=SATNTP_PORT=${SATNTP_PORT}/" \
+    "$INSTALL_DIR/config/satntp.service" > /etc/systemd/system/satntp.service
 systemctl daemon-reload
 systemctl enable satntp.service
 
@@ -72,5 +92,5 @@ echo "  sudo systemctl restart gpsd"
 echo "  sudo systemctl restart chronyd"
 echo "  sudo systemctl start satntp"
 echo ""
-echo "Web UI: http://$(hostname -I | awk '{print $1}'):5000"
+echo "Web UI: http://$(hostname -I | awk '{print $1}'):${SATNTP_PORT}"
 echo ""
