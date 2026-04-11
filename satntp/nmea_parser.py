@@ -183,22 +183,20 @@ def _talker_to_constellation(talker: str) -> str:
 
 
 def _prn_to_constellation(prn: int, talker: str) -> tuple:
-    """Determine constellation and normalize PRN from GPGSV data.
+    """Determine constellation and normalize PRN from GSV data.
 
-    In the real data, GPGSV reports mixed constellations using PRN ranges:
+    U-blox GNSS receivers report satellites using these NMEA PRN ranges
+    in GPGSV sentences (mixed constellations):
     - 1-32: GPS
-    - 33-64 (or 65-96): SBAS (subtract offset for display)
-    - 65-96: GLONASS (some receivers)
-    - 120-158: SBAS (WAAS/EGNOS/MSAS)
-    - 193-202: QZSS
-    - 201-237: BeiDou (some receivers)
-    - 301-336: Galileo (some receivers)
+    - 33-64: SBAS (add 87 for actual PRN: 120-151)
+    - 65-96: GLONASS (subtract 64 for slot number 1-32)
+    - 120-158: SBAS (WAAS/EGNOS/MSAS direct numbering)
+    - 193-199: QZSS (subtract 192 for SVID 1-7)
+    - 201-264: BeiDou (subtract 200 for SVID 1-64)
+    - 301-336: Galileo (subtract 300 for SVID 1-36)
 
-    From our actual data:
-    - PRNs 1-32 with talker GP -> GPS
-    - PRN 42,48,50 with talker GP -> these are SBAS (PRN = NMEA_PRN - 87 maps to
-      SBAS 129,135,137)
-    - PRN 194,195,196 with talker GP -> QZSS
+    System-specific talkers (GA, GL, GB, GQ) typically use direct SVIDs
+    but some receivers may use the offset PRN numbers above.
     """
     constellation = _talker_to_constellation(talker)
 
@@ -208,20 +206,44 @@ def _prn_to_constellation(prn: int, talker: str) -> tuple:
         elif 33 <= prn <= 64:
             # SBAS reported with offset in some receivers
             return ('SB', prn + 87)
+        elif 65 <= prn <= 96:
+            # GLONASS reported in GPGSV
+            return ('GL', prn - 64)
         elif 120 <= prn <= 158:
             # SBAS direct numbering
             return ('SB', prn)
-        elif 193 <= prn <= 202:
+        elif 193 <= prn <= 199:
             # QZSS
             return ('QZ', prn - 192)
+        elif 201 <= prn <= 264:
+            # BeiDou
+            return ('GB', prn - 200)
+        elif 301 <= prn <= 336:
+            # Galileo
+            return ('GA', prn - 300)
         elif prn > 100:
-            # Other high PRNs from GP talker - try to categorize
+            # Other high PRNs from GP talker - unknown system
             return ('??', prn)
     elif talker == 'GL':
         # GLONASS: PRN 65-96 maps to slot 1-32
         if prn >= 65:
             return ('GL', prn - 64)
         return ('GL', prn)
+    elif talker == 'GA':
+        # Galileo: PRN 301-336 maps to SVID 1-36
+        if prn >= 301:
+            return ('GA', prn - 300)
+        return ('GA', prn)
+    elif talker in ('GB', 'BD'):
+        # BeiDou: PRN 201-264 maps to SVID 1-64
+        if prn >= 201:
+            return ('GB', prn - 200)
+        return ('GB', prn)
+    elif talker in ('GQ', 'QZ'):
+        # QZSS: PRN 193-199 maps to SVID 1-7
+        if prn >= 193:
+            return ('QZ', prn - 192)
+        return ('QZ', prn)
 
     return (constellation, prn)
 
