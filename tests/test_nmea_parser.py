@@ -134,6 +134,64 @@ class TestPRNToConstellation:
         assert const == 'QZ'
         assert prn == 4
 
+    # --- Galileo (u-blox PRN 301-336 in GPGSV) ---
+
+    def test_galileo_prn_302(self):
+        const, prn = _prn_to_constellation(302, 'GP')
+        assert const == 'GA'
+        assert prn == 2
+
+    def test_galileo_prn_336(self):
+        const, prn = _prn_to_constellation(336, 'GP')
+        assert const == 'GA'
+        assert prn == 36
+
+    # --- BeiDou (u-blox PRN 201-264 in GPGSV) ---
+
+    def test_beidou_prn_201(self):
+        const, prn = _prn_to_constellation(201, 'GP')
+        assert const == 'GB'
+        assert prn == 1
+
+    def test_beidou_prn_237(self):
+        const, prn = _prn_to_constellation(237, 'GP')
+        assert const == 'GB'
+        assert prn == 37
+
+    # --- GLONASS (u-blox PRN 65-96 in GPGSV) ---
+
+    def test_glonass_prn_65(self):
+        const, prn = _prn_to_constellation(65, 'GP')
+        assert const == 'GL'
+        assert prn == 1
+
+    def test_glonass_prn_88(self):
+        const, prn = _prn_to_constellation(88, 'GP')
+        assert const == 'GL'
+        assert prn == 24
+
+    # --- System-specific talkers with offset PRNs ---
+
+    def test_galileo_talker_direct_svid(self):
+        const, prn = _prn_to_constellation(5, 'GA')
+        assert const == 'GA'
+        assert prn == 5
+
+    def test_galileo_talker_offset_prn(self):
+        const, prn = _prn_to_constellation(305, 'GA')
+        assert const == 'GA'
+        assert prn == 5
+
+    def test_beidou_talker_direct_svid(self):
+        const, prn = _prn_to_constellation(10, 'GB')
+        assert const == 'GB'
+        assert prn == 10
+
+    def test_beidou_talker_offset_prn(self):
+        const, prn = _prn_to_constellation(210, 'GB')
+        assert const == 'GB'
+        assert prn == 10
+
 
 class TestRMCParsing:
     """Test GPRMC parsing with real NO FIX data."""
