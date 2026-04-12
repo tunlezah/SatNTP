@@ -376,6 +376,128 @@ footer {
     margin-top: 20px;
 }
 
+/* Primary Time Source Banner */
+.primary-source-banner {
+    padding: 16px 20px;
+    border-left: 4px solid var(--text-muted);
+    transition: border-color 0.3s ease;
+}
+
+.primary-source-banner.source-gps,
+.primary-source-banner.source-pps {
+    border-left-color: var(--accent-green);
+}
+
+.primary-source-banner.source-ntp {
+    border-left-color: var(--accent-yellow);
+}
+
+.primary-source-banner.source-none {
+    border-left-color: var(--accent-red);
+}
+
+.banner-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+
+.banner-body {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.banner-main {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.banner-name {
+    font-family: var(--font-mono);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.banner-chip {
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    border-radius: 12px;
+    background: var(--bg-card-hover);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    font-weight: 500;
+}
+
+.primary-source-banner.source-gps .banner-chip.chip-type,
+.primary-source-banner.source-pps .banner-chip.chip-type {
+    background: rgba(52, 211, 153, 0.15);
+    color: var(--accent-green);
+    border-color: rgba(52, 211, 153, 0.3);
+}
+
+.primary-source-banner.source-ntp .banner-chip.chip-type {
+    background: rgba(251, 191, 36, 0.15);
+    color: var(--accent-yellow);
+    border-color: rgba(251, 191, 36, 0.3);
+}
+
+.banner-meta {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.banner-time {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+}
+
+.banner-meta-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.banner-meta-value {
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.banner-constellations {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+/* Selected source row highlight in the Time Sources table */
+tbody tr.source-row-selected {
+    background: rgba(52, 211, 153, 0.08);
+}
+
+tbody tr.source-row-selected:hover {
+    background: rgba(52, 211, 153, 0.12);
+}
+
+tbody tr.source-row-selected td:first-child {
+    box-shadow: inset 3px 0 0 var(--accent-green);
+}
+
 /* Responsive */
 @media (max-width: 900px) {
     .grid-row {
@@ -387,5 +509,15 @@ footer {
     }
     main {
         padding: 12px;
+    }
+    .banner-body {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .banner-meta {
+        justify-content: flex-start;
+    }
+    .banner-time {
+        align-items: flex-start;
     }
 }
