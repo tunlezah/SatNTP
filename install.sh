@@ -31,12 +31,39 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+# ── Auto-uninstall any previous install ──
+# A prior install leaves behind the systemd unit, the install dir, the
+# service user, and replaced gpsd/chrony configs. Re-running install on top
+# of that state is error-prone (stale service file, drifted chrony config
+# backups, etc.), so always invoke ./uninstall.sh first when we detect a
+# previous install.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f /etc/systemd/system/satntp.service ] \
+   || [ -d "$INSTALL_DIR" ] \
+   || id "$SERVICE_USER" &>/dev/null; then
+    if [ -x "$SCRIPT_DIR/uninstall.sh" ]; then
+        echo "Previous SatNTP install detected — running uninstall.sh first..."
+        echo ""
+        "$SCRIPT_DIR/uninstall.sh"
+        echo ""
+        echo "Proceeding with fresh install..."
+        echo ""
+    else
+        echo "WARNING: previous install detected but $SCRIPT_DIR/uninstall.sh"
+        echo "         is missing or not executable. Continuing anyway."
+        echo ""
+    fi
+fi
+
 # ── Find available web server port ──
+# NOTE: anything this function writes to stdout becomes its return value, so
+# status/progress messages must go to stderr — otherwise the "trying next..."
+# line gets captured into $SATNTP_PORT and corrupts downstream `sed`/`[ -ne ]`.
 find_available_port() {
     local port=$1
     while ss -tlnH "sport = :$port" 2>/dev/null | grep -q ":$port " || \
           ss -tlnH 2>/dev/null | grep -q ":$port "; do
-        echo "  Port $port is in use, trying next..."
+        echo "  Port $port is in use, trying next..." >&2
         port=$((port + 1))
     done
     echo "$port"
