@@ -19,6 +19,25 @@
     </header>
 
     <main>
+        <!-- Primary Time Source Banner -->
+        <section class="card primary-source-banner" id="primary-source-card">
+            <div class="banner-label">Primary Time Source</div>
+            <div class="banner-body">
+                <div class="banner-main">
+                    <span id="primary-source-name" class="banner-name">--</span>
+                    <span id="primary-source-type" class="banner-chip">--</span>
+                    <span id="primary-source-stratum" class="banner-chip">Stratum --</span>
+                </div>
+                <div class="banner-meta">
+                    <div class="banner-time">
+                        <span class="banner-meta-label">UTC from source</span>
+                        <span id="primary-source-time" class="banner-meta-value">--:--:--</span>
+                    </div>
+                    <div id="primary-source-constellations" class="banner-constellations"></div>
+                </div>
+            </div>
+        </section>
+
         <!-- Row 1: GPS Fix + Chrony Tracking -->
         <div class="grid-row">
             <section class="card" id="gps-fix-card">
@@ -157,6 +176,7 @@
                             <th>State</th>
                             <th>Name</th>
                             <th>Stratum</th>
+                            <th>UTC Time</th>
                             <th>Poll</th>
                             <th>Reach</th>
                             <th>Last Rx</th>
@@ -199,7 +219,7 @@
     </main>
 
     <footer>
-        <span>SatNTP v1.2.0 &mdash; GPS-Disciplined NTP Server</span>
+        <span>SatNTP v1.3.0 &mdash; GPS-Disciplined NTP Server</span>
     </footer>
 
     <script src="/static/js/skyview.js"></script>

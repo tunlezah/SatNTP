@@ -34,6 +34,7 @@ const Dashboard = {
             this.updateConnectionStatus(true);
             this.updateGPS(data.gps);
             this.updateChrony(data.chrony);
+            this.updatePrimarySourceBanner(data.chrony, data.gps);
             this.updateGPSD(data.gpsd, data.gps);
         } catch (err) {
             this.errorCount++;
@@ -178,10 +179,116 @@ const Dashboard = {
         this.updateSourcesTable(chrony.sources);
     },
 
+    /**
+     * Convert a chrony offset string (e.g. "+877us", "-141ms", "+0.000420814 seconds")
+     * to seconds as a Number. Returns 0 for unparseable input so callers can
+     * still display the reference system time.
+     */
+    parseOffsetSeconds(raw) {
+        if (!raw || typeof raw !== 'string') return 0;
+        const s = raw.trim();
+        // Match: optional sign, digits/decimal, optional unit (ns|us|µs|ms|s|seconds)
+        const m = s.match(/^([+-]?)(\d+(?:\.\d+)?)(?:\s*)(ns|us|µs|ms|s|seconds?)?/i);
+        if (!m) return 0;
+        const sign = m[1] === '-' ? -1 : 1;
+        const magnitude = parseFloat(m[2]);
+        if (!isFinite(magnitude)) return 0;
+        const unit = (m[3] || 's').toLowerCase();
+        const scale = {
+            'ns': 1e-9,
+            'us': 1e-6, 'µs': 1e-6,
+            'ms': 1e-3,
+            's': 1, 'second': 1, 'seconds': 1,
+        }[unit] || 1;
+        return sign * magnitude * scale;
+    },
+
+    /** Format a Date as HH:MM:SS UTC. */
+    formatUtcTime(date) {
+        if (!date || isNaN(date.getTime())) return '--:--:--';
+        return date.toISOString().substring(11, 19);
+    },
+
+    /**
+     * Build the primary-time-source banner from chrony tracking/sources plus
+     * gpsd satellite info (for the constellation mix when GPS is primary).
+     */
+    updatePrimarySourceBanner(chrony, gps) {
+        const card = document.getElementById('primary-source-card');
+        const nameEl = document.getElementById('primary-source-name');
+        const typeEl = document.getElementById('primary-source-type');
+        const stratumEl = document.getElementById('primary-source-stratum');
+        const timeEl = document.getElementById('primary-source-time');
+        const constEl = document.getElementById('primary-source-constellations');
+
+        // Default baseline class that gets replaced by source-{gps,pps,ntp,none}
+        card.className = 'card primary-source-banner source-none';
+        typeEl.className = 'banner-chip chip-type';
+
+        const sources = (chrony && chrony.sources) || [];
+        const tracking = (chrony && chrony.tracking) || {};
+        const selected = sources.find(s => s.is_selected);
+
+        if (!selected) {
+            nameEl.textContent = 'No source selected';
+            typeEl.textContent = '--';
+            stratumEl.textContent = tracking.stratum
+                ? `Stratum ${tracking.stratum}` : 'Stratum --';
+            timeEl.textContent = '--:--:--';
+            constEl.innerHTML = '';
+            return;
+        }
+
+        // Classify the selected source for colour + label.
+        // refid names "GPS"/"PPS" are our refclocks (mode '#').
+        const refidUpper = (selected.name || '').toUpperCase();
+        let kind = 'ntp';           // default: network NTP server
+        let typeLabel = 'Network NTP';
+        if (selected.mode === '#') {
+            if (refidUpper === 'PPS') {
+                kind = 'pps';
+                typeLabel = 'PPS Refclock';
+            } else {
+                kind = 'gps';
+                typeLabel = 'GPS Refclock';
+            }
+        }
+        card.classList.add('source-' + kind);
+
+        nameEl.textContent = selected.name;
+        typeEl.textContent = typeLabel;
+        stratumEl.textContent = `Stratum ${tracking.stratum || '--'}`;
+
+        // UTC time reported by the selected source = now + its offset to system.
+        // (For the selected source chrony *is* tracking it, so this is very close
+        // to the system clock; the tiny offset mostly reflects residual error.)
+        const offsetSec = this.parseOffsetSeconds(selected.offset);
+        const sourceTime = new Date(Date.now() + offsetSec * 1000);
+        timeEl.textContent = this.formatUtcTime(sourceTime) + ' UTC';
+
+        // Constellation mix (only meaningful when GPS/PPS is the primary).
+        constEl.innerHTML = '';
+        if ((kind === 'gps' || kind === 'pps') && gps && Array.isArray(gps.satellites)) {
+            const counts = {};
+            for (const s of gps.satellites) {
+                if (s.used) counts[s.constellation] = (counts[s.constellation] || 0) + 1;
+            }
+            const constLabels = {
+                GP: 'GPS', SB: 'SBAS', QZ: 'QZSS',
+                GL: 'GLONASS', GA: 'Galileo', GB: 'BeiDou',
+            };
+            const order = ['GP', 'GA', 'GL', 'GB', 'QZ', 'SB'];
+            const parts = order
+                .filter(c => counts[c])
+                .map(c => `<span class="constellation-badge ${c.toLowerCase()}">${constLabels[c]} ×${counts[c]}</span>`);
+            constEl.innerHTML = parts.join('');
+        }
+    },
+
     updateSourcesTable(sources) {
         const tbody = document.getElementById('sources-tbody');
         if (!sources || sources.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#5c6078">No source data</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#5c6078">No source data</td></tr>';
             return;
         }
 
@@ -190,12 +297,27 @@ const Dashboard = {
             'x': 'error', '~': 'variable', '?': 'unusable',
         };
 
+        // Capture "now" once so every computed source time uses the same
+        // reference, otherwise rows would disagree by milliseconds.
+        const nowMs = Date.now();
+
         tbody.innerHTML = sources.map(src => {
             const dotClass = stateColors[src.state] || 'unusable';
             const typeLabel = { '#': 'Refclock', '^': 'Server', '=': 'Peer' }[src.mode] || src.mode;
             const reachBits = src.reach.toString(2).padStart(8, '0');
+            const rowClass = src.is_selected ? ' class="source-row-selected"' : '';
 
-            return `<tr>
+            // Per-source UTC time: system time + this source's offset.
+            // Only meaningful when the source is reachable; otherwise we've
+            // only ever had stale data so show a dash.
+            let sourceTimeCell = '-';
+            if (src.is_reachable && src.offset) {
+                const offsetSec = this.parseOffsetSeconds(src.offset);
+                const t = new Date(nowMs + offsetSec * 1000);
+                sourceTimeCell = this.formatUtcTime(t);
+            }
+
+            return `<tr${rowClass}>
                 <td>${typeLabel}</td>
                 <td>
                     <span class="source-state">
@@ -205,6 +327,7 @@ const Dashboard = {
                 </td>
                 <td>${src.name}</td>
                 <td>${src.stratum}</td>
+                <td>${sourceTimeCell}</td>
                 <td>2<sup>${src.poll}</sup> (${Math.pow(2, src.poll)}s)</td>
                 <td title="Binary: ${reachBits}">${src.reach > 0 ? src.reach.toString(8).padStart(3, '0') : '000'}</td>
                 <td>${src.last_rx || '-'}</td>
