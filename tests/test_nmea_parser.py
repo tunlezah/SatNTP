@@ -192,6 +192,38 @@ class TestPRNToConstellation:
         assert const == 'GB'
         assert prn == 10
 
+    # --- NavIC / IRNSS (u-blox PRN 401-437 in GPGSV) ---
+
+    def test_navic_prn_401(self):
+        const, prn = _prn_to_constellation(401, 'GP')
+        assert const == 'GI'
+        assert prn == 1
+
+    def test_navic_prn_409(self):
+        const, prn = _prn_to_constellation(409, 'GP')
+        assert const == 'GI'
+        assert prn == 9
+
+    def test_navic_prn_416(self):
+        const, prn = _prn_to_constellation(416, 'GP')
+        assert const == 'GI'
+        assert prn == 16
+
+    def test_navic_prn_437(self):
+        const, prn = _prn_to_constellation(437, 'GP')
+        assert const == 'GI'
+        assert prn == 37
+
+    def test_navic_talker_direct_svid(self):
+        const, prn = _prn_to_constellation(5, 'GI')
+        assert const == 'GI'
+        assert prn == 5
+
+    def test_navic_talker_offset_prn(self):
+        const, prn = _prn_to_constellation(405, 'GI')
+        assert const == 'GI'
+        assert prn == 5
+
 
 class TestRMCParsing:
     """Test GPRMC parsing with real NO FIX data."""

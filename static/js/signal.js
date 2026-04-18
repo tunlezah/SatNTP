@@ -17,6 +17,7 @@ const SignalChart = {
         GL: '#f87171',
         GA: '#34d399',
         GB: '#fbbf24',
+        GI: '#f472b6',
         '??': '#8b8fa3',
     },
 

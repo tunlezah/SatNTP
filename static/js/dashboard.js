@@ -121,6 +121,7 @@ const Dashboard = {
             const constName = {
                 GP: 'GPS', SB: 'SBAS', QZ: 'QZSS',
                 GL: 'GLONASS', GA: 'Galileo', GB: 'BeiDou',
+                GI: 'NavIC',
             }[sat.constellation] || sat.constellation;
 
             const snrColor = this.snrColor(sat.snr);
@@ -276,8 +277,9 @@ const Dashboard = {
             const constLabels = {
                 GP: 'GPS', SB: 'SBAS', QZ: 'QZSS',
                 GL: 'GLONASS', GA: 'Galileo', GB: 'BeiDou',
+                GI: 'NavIC',
             };
-            const order = ['GP', 'GA', 'GL', 'GB', 'QZ', 'SB'];
+            const order = ['GP', 'GA', 'GL', 'GB', 'QZ', 'GI', 'SB'];
             const parts = order
                 .filter(c => counts[c])
                 .map(c => `<span class="constellation-badge ${c.toLowerCase()}">${constLabels[c]} ×${counts[c]}</span>`);
