@@ -20,6 +20,7 @@ const SkyView = {
         GL: '#f87171',  // GLONASS - red
         GA: '#34d399',  // Galileo - green
         GB: '#fbbf24',  // BeiDou - yellow
+        GI: '#f472b6',  // NavIC - pink
         '??': '#8b8fa3', // Unknown - gray
     },
 
@@ -30,6 +31,7 @@ const SkyView = {
         GL: 'GLONASS',
         GA: 'Galileo',
         GB: 'BeiDou',
+        GI: 'NavIC',
     },
 
     init(canvasId) {

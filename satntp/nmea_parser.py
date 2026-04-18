@@ -167,6 +167,7 @@ def _talker_to_constellation(talker: str) -> str:
     - GA = Galileo
     - GB/BD = BeiDou
     - GQ/QZ = QZSS
+    - GI = NavIC (IRNSS)
     - GN = multi-GNSS combined
     """
     mapping = {
@@ -177,6 +178,7 @@ def _talker_to_constellation(talker: str) -> str:
         'BD': 'GB',
         'GQ': 'QZ',
         'QZ': 'QZ',
+        'GI': 'GI',
         'GN': 'GN',
     }
     return mapping.get(talker, talker)
@@ -194,8 +196,9 @@ def _prn_to_constellation(prn: int, talker: str) -> tuple:
     - 193-199: QZSS (subtract 192 for SVID 1-7)
     - 201-264: BeiDou (subtract 200 for SVID 1-64)
     - 301-336: Galileo (subtract 300 for SVID 1-36)
+    - 401-437: NavIC / IRNSS (subtract 400 for SVID 1-37)
 
-    System-specific talkers (GA, GL, GB, GQ) typically use direct SVIDs
+    System-specific talkers (GA, GL, GB, GQ, GI) typically use direct SVIDs
     but some receivers may use the offset PRN numbers above.
     """
     constellation = _talker_to_constellation(talker)
@@ -221,6 +224,9 @@ def _prn_to_constellation(prn: int, talker: str) -> tuple:
         elif 301 <= prn <= 336:
             # Galileo
             return ('GA', prn - 300)
+        elif 401 <= prn <= 437:
+            # NavIC / IRNSS
+            return ('GI', prn - 400)
         elif prn > 100:
             # Other high PRNs from GP talker - unknown system
             return ('??', prn)
@@ -244,6 +250,11 @@ def _prn_to_constellation(prn: int, talker: str) -> tuple:
         if prn >= 193:
             return ('QZ', prn - 192)
         return ('QZ', prn)
+    elif talker == 'GI':
+        # NavIC/IRNSS: PRN 401-437 maps to SVID 1-37
+        if prn >= 401:
+            return ('GI', prn - 400)
+        return ('GI', prn)
 
     return (constellation, prn)
 
@@ -488,7 +499,7 @@ class NMEAParser:
             keys_to_remove = [
                 k for k in self.state.satellites
                 if k[0] == _talker_to_constellation(talker)
-                or (talker == 'GP' and k[0] in ('GP', 'SB', 'QZ', 'GL', 'GA', 'GB', '??'))
+                or (talker == 'GP' and k[0] in ('GP', 'SB', 'QZ', 'GL', 'GA', 'GB', 'GI', '??'))
             ]
             for k in keys_to_remove:
                 del self.state.satellites[k]
