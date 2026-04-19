@@ -38,6 +38,43 @@
             </div>
         </section>
 
+        <!-- Integrity / Anomaly Detection (collapsed by default, degrades silently) -->
+        <section class="card integrity-card collapsed" id="integrity-card" hidden>
+            <header class="integrity-header" id="integrity-header">
+                <div class="integrity-title">
+                    <h2>Integrity</h2>
+                    <span id="integrity-pill" class="integrity-pill pill-nominal">Nominal</span>
+                    <span id="integrity-summary-text" class="integrity-summary-text"></span>
+                </div>
+                <button type="button" class="integrity-toggle" id="integrity-toggle" aria-expanded="false">
+                    <span class="toggle-label">Show</span>
+                    <span class="toggle-caret">▾</span>
+                </button>
+            </header>
+            <div class="integrity-body" id="integrity-body">
+                <div class="integrity-grid">
+                    <div class="integrity-panel">
+                        <div class="panel-label">Timeline <span class="panel-sub" id="integrity-timeline-range">last 10 min</span></div>
+                        <canvas id="integrity-timeline" width="800" height="70"></canvas>
+                    </div>
+                    <div class="integrity-panel">
+                        <div class="panel-label">Position drift <span class="panel-sub">vs rolling median</span></div>
+                        <canvas id="integrity-drift" width="240" height="240"></canvas>
+                    </div>
+                    <div class="integrity-panel">
+                        <div class="panel-label">Per-constellation</div>
+                        <div id="integrity-constellations" class="integrity-constellations"></div>
+                    </div>
+                </div>
+                <div class="integrity-panel integrity-log-panel">
+                    <div class="panel-label">Recent events</div>
+                    <ul id="integrity-log" class="integrity-log">
+                        <li class="integrity-log-empty">No events recorded yet.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
         <!-- Row 1: GPS Fix + Chrony Tracking -->
         <div class="grid-row">
             <section class="card" id="gps-fix-card">
@@ -224,6 +261,7 @@
 
     <script src="/static/js/skyview.js"></script>
     <script src="/static/js/signal.js"></script>
+    <script src="/static/js/integrity.js"></script>
     <script src="/static/js/dashboard.js"></script>
 </body>
 </html>

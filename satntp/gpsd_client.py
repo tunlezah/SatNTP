@@ -13,17 +13,27 @@ import logging
 import subprocess
 import threading
 import time
-from typing import Optional
+from typing import Callable, Optional
 
+from satntp.history import ConstellationStats, HistoryBuffer, Sample, parse_utc_epoch
 from satntp.nmea_parser import NMEAParser
 
 logger = logging.getLogger(__name__)
+
+SAMPLE_INTERVAL_S = 1.0
 
 
 class GPSDClient:
     """Client that connects to gpsd and maintains current GPS state."""
 
-    def __init__(self, host: str = '127.0.0.1', port: int = 2947):
+    def __init__(
+        self,
+        host: str = '127.0.0.1',
+        port: int = 2947,
+        history: Optional[HistoryBuffer] = None,
+        on_sample: Optional[Callable[[Sample], None]] = None,
+        chrony_offset_cb: Optional[Callable[[], Optional[float]]] = None,
+    ):
         self.host = host
         self.port = port
         self.parser = NMEAParser()
@@ -33,6 +43,11 @@ class GPSDClient:
         self._connected = False
         self._gpsd_version: Optional[str] = None
         self._devices: list = []
+        # Optional integrity-monitoring hooks — all no-ops if not provided.
+        self._history = history
+        self._on_sample = on_sample
+        self._chrony_offset_cb = chrony_offset_cb
+        self._last_sample_time: float = 0.0
 
     @property
     def connected(self) -> bool:
@@ -114,6 +129,7 @@ class GPSDClient:
                 elif line.startswith('$'):
                     with self._lock:
                         self.parser.parse_sentence(line)
+                    self._maybe_sample()
         finally:
             proc.terminate()
             try:
@@ -232,3 +248,59 @@ class GPSDClient:
 
             self.parser.state.last_update = time.time()
             self.parser.state.sentences_parsed += 1
+        self._maybe_sample()
+
+    # ──────────────────────────────────────────────────────────
+    # Integrity sampling
+    # ──────────────────────────────────────────────────────────
+    def _maybe_sample(self) -> None:
+        """Take a snapshot for the history buffer, rate-limited to ~1 Hz."""
+        if self._history is None:
+            return
+        now = time.time()
+        if now - self._last_sample_time < SAMPLE_INTERVAL_S:
+            return
+        self._last_sample_time = now
+        sample = self._build_sample(now)
+        self._history.append(sample)
+        if self._on_sample is not None:
+            try:
+                self._on_sample(sample)
+            except Exception as e:
+                logger.debug(f"on_sample hook error: {e}")
+
+    def _build_sample(self, now: float) -> Sample:
+        """Compose a Sample from current parser state (thread-safe)."""
+        with self._lock:
+            fix = self.parser.state.fix
+            sats = self.parser.state.satellites
+            by_const: dict = {}
+            for (cid, _prn), sat in sats.items():
+                stats = by_const.setdefault(cid, ConstellationStats())
+                if sat.tracked:
+                    stats.tracked += 1
+                    stats.snr_list.append(sat.snr)
+                if sat.used:
+                    stats.used += 1
+                    stats.used_prns.append(sat.prn)
+            for stats in by_const.values():
+                if stats.snr_list:
+                    stats.avg_snr = sum(stats.snr_list) / len(stats.snr_list)
+
+            return Sample(
+                t=now,
+                utc=fix.utc_time,
+                utc_epoch=parse_utc_epoch(fix.utc_date, fix.utc_time),
+                has_fix=fix.has_fix,
+                mode=fix.mode,
+                lat=fix.latitude,
+                lon=fix.longitude,
+                hdop=fix.hdop,
+                pdop=fix.pdop,
+                vdop=fix.vdop,
+                speed_knots=fix.speed_knots,
+                constellations=by_const,
+                chrony_offset_s=(
+                    self._chrony_offset_cb() if self._chrony_offset_cb else None
+                ),
+            )
