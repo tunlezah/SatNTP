@@ -500,6 +500,262 @@ tbody tr.source-row-selected td:first-child {
     box-shadow: inset 3px 0 0 var(--accent-green);
 }
 
+/* Integrity / Anomaly Detection Card */
+.integrity-card {
+    padding: 0;
+    overflow: hidden;
+}
+
+.integrity-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    gap: 12px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.integrity-header:hover {
+    background: var(--bg-card-hover);
+}
+
+.integrity-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.integrity-title h2 {
+    margin-bottom: 0;
+}
+
+.integrity-summary-text {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+}
+
+.integrity-pill {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 12px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    border: 1px solid transparent;
+}
+
+.integrity-pill.pill-nominal {
+    background: rgba(52, 211, 153, 0.15);
+    color: var(--accent-green);
+    border-color: rgba(52, 211, 153, 0.3);
+}
+
+.integrity-pill.pill-info {
+    background: rgba(74, 158, 255, 0.15);
+    color: var(--accent-blue);
+    border-color: rgba(74, 158, 255, 0.3);
+}
+
+.integrity-pill.pill-warn {
+    background: rgba(251, 191, 36, 0.15);
+    color: var(--accent-yellow);
+    border-color: rgba(251, 191, 36, 0.3);
+}
+
+.integrity-pill.pill-critical {
+    background: rgba(248, 113, 113, 0.18);
+    color: var(--accent-red);
+    border-color: rgba(248, 113, 113, 0.4);
+    animation: pulse-red 2s ease-in-out infinite;
+}
+
+.integrity-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.integrity-toggle:hover {
+    background: var(--bg-card-hover);
+    color: var(--text-primary);
+}
+
+.integrity-body {
+    border-top: 1px solid var(--border);
+    padding: 16px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.integrity-card.collapsed .integrity-body {
+    display: none;
+}
+
+.integrity-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1.2fr);
+    gap: 16px;
+}
+
+.integrity-panel {
+    background: rgba(15, 17, 23, 0.4);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    min-width: 0;
+}
+
+.panel-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.panel-sub {
+    color: var(--text-muted);
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 400;
+}
+
+#integrity-timeline, #integrity-drift {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+.integrity-constellations {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.integrity-const-row {
+    display: grid;
+    grid-template-columns: 70px 1fr auto;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 6px;
+    border-radius: 6px;
+}
+
+.integrity-const-row.flagged {
+    background: rgba(248, 113, 113, 0.08);
+    outline: 1px solid rgba(248, 113, 113, 0.35);
+}
+
+.integrity-const-bar {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.integrity-const-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.integrity-const-bar-fill.gp { background: var(--gps-color); }
+.integrity-const-bar-fill.sb { background: var(--sbas-color); }
+.integrity-const-bar-fill.qz { background: var(--qzss-color); }
+.integrity-const-bar-fill.gl { background: var(--glonass-color); }
+.integrity-const-bar-fill.ga { background: var(--galileo-color); }
+.integrity-const-bar-fill.gb { background: var(--beidou-color); }
+.integrity-const-bar-fill.gi { background: var(--navic-color); }
+
+.integrity-const-meta {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.integrity-empty {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    padding: 12px 4px;
+}
+
+.integrity-log-panel {
+    padding: 12px 14px;
+}
+
+.integrity-log {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 180px;
+    overflow-y: auto;
+}
+
+.integrity-log-empty {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    padding: 6px 0;
+}
+
+.integrity-log-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    padding: 4px 6px;
+    border-left: 3px solid transparent;
+    border-radius: 4px;
+}
+
+.integrity-log-item.sev-info { border-left-color: var(--accent-blue); }
+.integrity-log-item.sev-warn { border-left-color: var(--accent-yellow); }
+.integrity-log-item.sev-critical { border-left-color: var(--accent-red); }
+
+.log-time {
+    color: var(--text-muted);
+    min-width: 64px;
+}
+
+.log-sev {
+    font-weight: 700;
+    font-size: 0.7rem;
+    padding: 1px 6px;
+    border-radius: 3px;
+}
+
+.log-sev.sev-info { color: var(--accent-blue); background: rgba(74, 158, 255, 0.1); }
+.log-sev.sev-warn { color: var(--accent-yellow); background: rgba(251, 191, 36, 0.1); }
+.log-sev.sev-critical { color: var(--accent-red); background: rgba(248, 113, 113, 0.12); }
+
+.log-kind {
+    color: var(--text-primary);
+    text-transform: capitalize;
+}
+
+.log-evidence {
+    color: var(--text-secondary);
+    margin-left: auto;
+    text-align: right;
+}
+
 /* Responsive */
 @media (max-width: 900px) {
     .grid-row {
@@ -521,5 +777,12 @@ tbody tr.source-row-selected td:first-child {
     }
     .banner-time {
         align-items: flex-start;
+    }
+    .integrity-grid {
+        grid-template-columns: 1fr;
+    }
+    .log-evidence {
+        margin-left: 0;
+        text-align: left;
     }
 }

@@ -36,11 +36,29 @@ const Dashboard = {
             this.updateChrony(data.chrony);
             this.updatePrimarySourceBanner(data.chrony, data.gps);
             this.updateGPSD(data.gpsd, data.gps);
+            this.pollAnomalies(data.anomaly_summary);
         } catch (err) {
             this.errorCount++;
             if (this.errorCount > 3) {
                 this.updateConnectionStatus(false);
             }
+        }
+    },
+
+    async pollAnomalies(summary) {
+        // Integrity is optional; skip entirely if the server doesn't advertise it.
+        if (typeof Integrity === 'undefined') return;
+        if (summary === undefined) {
+            Integrity.update({ enabled: false });
+            return;
+        }
+        try {
+            const resp = await fetch('/api/anomalies?limit=50');
+            if (!resp.ok) { Integrity.update({ enabled: false }); return; }
+            const data = await resp.json();
+            Integrity.update(data);
+        } catch (err) {
+            // Leave last render in place
         }
     },
 
